@@ -25,6 +25,9 @@ import smile.math.Math;
 import smile.sort.QuickSort;
 import smile.util.MulticoreExecutor;
 
+import javax.persistence.Entity;
+import javax.persistence.Id;
+
 /**
  * Decision tree for classification. A decision tree can be learned by
  * splitting the training set into subsets based on an attribute value
@@ -94,13 +97,13 @@ import smile.util.MulticoreExecutor;
  * 
  * @author Haifeng Li
  */
-public class DecisionTree implements SoftClassifier<double[]> {
-    private static final long serialVersionUID = 1L;
 
+public class DecisionTree implements SoftClassifier<double[]> {
+    // private static final long serialVersionUID = 1L;
     /**
      * The attributes of independent variable.
      */
-    private Attribute[] attributes;
+    public Attribute[] attributes;
     /**
      * Variable importance. Every time a split of a node is made on variable
      * the (GINI, information gain, etc.) impurity criterion for the two
@@ -108,37 +111,37 @@ public class DecisionTree implements SoftClassifier<double[]> {
      * for each individual variable over the tree gives a simple measure of
      * variable importance.
      */
-    private double[] importance;
+    public double[] importance;
     /**
      * The root of the regression tree
      */
-    private Node root;
+    public Node root;
     /**
      * The splitting rule.
      */
-    private SplitRule rule = SplitRule.GINI;
+    public SplitRule rule = SplitRule.GINI;
     /**
      * The number of classes.
      */
-    private int k = 2;
+    public int k = 2;
     /**
      * The minimum size of leaf nodes.
      */
-    private int nodeSize = 1;
+    public int nodeSize = 1;
     /**
      * The maximum number of leaf nodes in the tree.
      */
-    private int maxNodes = 100;
+    public int maxNodes = 100;
     /**
      * The number of input variables to be used to determine the decision
      * at a node of the tree.
      */
-    private int mtry;
+    public int mtry;
     /**
      * The index of training values in ascending order. Note that only numeric
      * attributes will be sorted.
      */
-    private transient int[][] order;
+    public transient int[][] order;
 
     /**
      * Trainer for decision tree classifiers.
@@ -774,7 +777,9 @@ public class DecisionTree implements SoftClassifier<double[]> {
 
         return impurity;
     }
-    
+
+    public DecisionTree(){};
+
     /**
      * Constructor. Learns a classification tree with (most) given number of
      * leaves. All attributes are assumed to be numeric.

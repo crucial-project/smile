@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: infinispan-creson-server
+  labels:
+    app: infinispan-creson-server
+spec:
+  replicas: %REPLICAS%
+  selector:
+    matchLabels:
+      app: infinispan-creson-server
+  template:
+    metadata:
+      labels:
+        app: infinispan-creson-server
+    spec:
+      containers:
+       - name: server
+         image: %IMAGE%
+         imagePullPolicy: "Always"
+         resources:
+           requests:
+             cpu: %CPU%
+           limits:
+             cpu: %CPU%
+         env:
+         - name: IP
+           valueFrom:
+             fieldRef:
+               fieldPath: status.podIP
+         - name: CLOUD
+           value: k8s
+         - name: EXTRA
+           value: "-rf 1"
+         - name: JVM_EXTRA
+           value: "-Xms64m -Xmx1024m"

@@ -15,19 +15,36 @@
  *******************************************************************************/
 package smile.classification;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.function.BiFunction;
+import java.util.function.Function;
+
+import com.google.common.collect.ArrayTable;
+import com.google.common.collect.ImmutableTable;
+import com.google.common.collect.Table;
+import com.google.common.primitives.Ints;
+import org.apache.commons.compress.utils.Lists;
+import org.infinispan.creson.AtomicBoolean;
+import org.infinispan.creson.AtomicMatrix;
+import org.infinispan.creson.Shared;
+import org.infinispan.creson.Factory;
+import org.otrack.executor.Marshalling;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import smile.data.Attribute;
 import smile.data.AttributeDataset;
 import smile.data.NumericAttribute;
 import smile.math.Math;
+import smile.math.matrix.Matrix;
 import smile.util.MulticoreExecutor;
+import smile.util.ServerlessExecutor;
 import smile.util.SmileUtils;
+import smile.util.Stream;
 import smile.validation.Accuracy;
 import smile.validation.ClassificationMeasure;
 
@@ -266,7 +283,8 @@ public class RandomForest implements SoftClassifier<double[]> {
     /**
      * Trains a regression tree.
      */
-    static class TrainingTask implements Callable<Tree> {
+    static class TrainingTask implements Callable<Tree>, Serializable {
+
         /**
          * Attribute properties.
          */
@@ -274,7 +292,7 @@ public class RandomForest implements SoftClassifier<double[]> {
         /**
          * Training instances.
          */
-        double[][] x;
+        AtomicMatrix<Double> x;
         /**
          * Training sample labels.
          */
@@ -307,16 +325,20 @@ public class RandomForest implements SoftClassifier<double[]> {
          * The index of training values in ascending order. Note that only
          * numeric attributes will be sorted.
          */
-        int[][] order;
+        AtomicMatrix<Integer> order;
         /**
          * The out-of-bag predictions.
          */
-        int[][] prediction;
+        AtomicMatrix<Integer> prediction;
+
+        DecisionTree tree;
+
+        // AtomicBoolean aBoolean;
 
         /**
          * Constructor.
          */
-        TrainingTask(Attribute[] attributes, double[][] x, int[] y, int maxNodes, int nodeSize, int mtry, double subsample, DecisionTree.SplitRule rule, int[] classWeight, int[][] order, int[][] prediction) {
+        TrainingTask(Attribute[] attributes, AtomicMatrix<Double> x, int[] y, int maxNodes, int nodeSize, int mtry, double subsample, DecisionTree.SplitRule rule, int[] classWeight, AtomicMatrix<Integer> order, AtomicMatrix<Integer> prediction) {
             this.attributes = attributes;
             this.x = x;
             this.y = y;
@@ -328,14 +350,15 @@ public class RandomForest implements SoftClassifier<double[]> {
             this.classWeight = classWeight;
             this.order = order;
             this.prediction = prediction;
+            // this.aBoolean = new AtomicBoolean();
         }
 
         @Override
         public Tree call() {
-            int n = x.length;
+            double[][] data = Stream.unboxDouble2D(x.toArray());
+            int n = data.length;
             int k = smile.math.Math.max(y) + 1;
             int[] samples = new int[n];
-
             // Stratified sampling in case class is unbalanced.
             // That is, we sample each class separately.
             if (subsample == 1.0) {
@@ -387,29 +410,33 @@ public class RandomForest implements SoftClassifier<double[]> {
 
             // samples will be changed during tree construction.
             // make a copy so that we can estimate oob error correctly.
-            DecisionTree tree = new DecisionTree(attributes, x, y, maxNodes, nodeSize, mtry, rule, samples.clone(), order);
+            tree = new DecisionTree(attributes, data, y, maxNodes, nodeSize, mtry, rule, samples.clone(), Stream.unboxInteger2D(order.toArray()));
 
             // estimate OOB error
-            int oob = 0;
-            int correct = 0;
-            for (int i = 0; i < n; i++) {
-                if (samples[i] == 0) {
-                    oob++;
-                    int p = tree.predict(x[i]);
-                    if (p == y[i]) correct++;
-                    synchronized (prediction[i]) {
-                        prediction[i][p]++;
-                    }
-                }
-            }
+//            int oob = 0;
+//            int correct = 0;
+//            Integer[][] toAdd = new Integer[prediction.columns()][prediction.rows()];
+//            for (int i = 0; i < n; i++) {
+//                if (samples[i] == 0) {
+//                    oob++;
+//                    int p = tree.predict(data[i]);
+//                    if (p == y[i]) correct++;
+//                    toAdd[i][p] = (toAdd[i][p] == null ? new Integer(0) : toAdd[i][p]+1);
+//                }
+//            }
+
+//            synchronized (prediction) {
+//                prediction.compute(toAdd,Integer::sum);
+//            }
+
 
             double accuracy = 1.0;
-            if (oob != 0) {
-                accuracy = (double) correct / oob;
-                logger.info("Random forest tree OOB size: {}, accuracy: {}", oob, String.format("%.2f%%", 100 * accuracy));
-            } else {
-                logger.error("Random forest has a tree trained without OOB samples.");
-            }
+//            if (oob != 0) {
+//                accuracy = (double) correct / oob;
+//                logger.info("Random forest tree OOB size: {}, accuracy: {}", oob, String.format("%.2f%%", 100 * accuracy));
+//            } else {
+//                logger.error("Random forest has a tree trained without OOB samples.");
+//            }
 
             return new Tree(tree, accuracy);
         }
@@ -574,6 +601,21 @@ public class RandomForest implements SoftClassifier<double[]> {
         this(data.attributes(), data.x(), data.labels(), ntrees, maxNodes, nodeSize, mtry, subsample, rule, classWeight);
     }
 
+    public static class LConstructor implements Function, Serializable{
+
+        @Override
+        public Object apply(Object o) {
+            return new Integer(0);
+        }
+    }
+
+    public static class LSum implements BiFunction<Integer,Integer,Integer>, Serializable{
+        @Override
+        public Integer apply(Integer integer, Integer integer2) {
+            return Integer.sum(integer,integer2);
+        }
+    }
+
     /**
      * Constructor. Learns a random forest for classification.
      *
@@ -655,15 +697,28 @@ public class RandomForest implements SoftClassifier<double[]> {
         }
 
         int n = x.length;
-        int[][] prediction = new int[n][k]; // out-of-bag prediction
-        int[][] order = SmileUtils.sort(attributes, x);
+        AtomicMatrix<Integer> prediction = null; // out-of-bag prediction
+        AtomicMatrix<Double> data = null;
+        AtomicMatrix<Integer> order = null;
+
+        prediction = Factory.getSingleton().getInstanceOf(AtomicMatrix.class,"prediction",false, false, true, "prediction", Integer.class, n, k);
+        data = Factory.getSingleton().getInstanceOf(AtomicMatrix.class,"data",false, false, true, "data", Stream.boxDouble2D(x));
+        order = Factory.getSingleton().getInstanceOf(AtomicMatrix.class,"order",false, false, true, "order", Stream.boxInteger2D(SmileUtils.sort(attributes, x)));
+
+//        prediction = new AtomicMatrix<>("prediction", Integer.class, n, k);
+//        data = new AtomicMatrix<Double>("data",Stream.boxDouble2D(x));
+//        order = new AtomicMatrix("order",Stream.boxInteger2D(SmileUtils.sort(attributes, x)));
+
+        prediction.forEach(new LConstructor());
+
         List<TrainingTask> tasks = new ArrayList<>();
         for (int i = 0; i < ntrees; i++) {
-            tasks.add(new TrainingTask(attributes, x, y, maxNodes, nodeSize, mtry, subsample, rule, classWeight, order, prediction));
+            tasks.add(new TrainingTask(attributes, data, y, maxNodes, nodeSize, mtry, subsample, rule, classWeight, order, prediction));
         }
         
         try {
-            trees = MulticoreExecutor.run(tasks);
+            trees = ServerlessExecutor.run(tasks);
+            // trees = MulticoreExecutor.run(tasks);
         } catch (Exception ex) {
             logger.error("Failed to train random forest on multi-core", ex);
 
@@ -672,11 +727,12 @@ public class RandomForest implements SoftClassifier<double[]> {
                 trees.add(tasks.get(i).call());
             }
         }
-        
+
+        int[][] pred_array = Stream.unboxInteger2D(prediction.toArray());
         int m = 0;
         for (int i = 0; i < n; i++) {
-            int pred = Math.whichMax(prediction[i]);
-            if (prediction[i][pred] > 0) {
+            int pred = 0; Math.whichMax(pred_array[i]);
+            if (pred_array[i][pred] > 0) {
                 m++;
                 if (pred != y[i]) {
                     error++;
@@ -687,7 +743,7 @@ public class RandomForest implements SoftClassifier<double[]> {
         if (m > 0) {
             error /= m;
         }
-        
+
         importance = new double[attributes.length];
         for (Tree tree : trees) {
             double[] imp = tree.tree.importance();

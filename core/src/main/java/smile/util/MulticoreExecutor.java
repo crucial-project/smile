@@ -23,6 +23,9 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadPoolExecutor;
+
+import org.infinispan.creson.AtomicInteger;
+import org.infinispan.creson.Factory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,6 +41,9 @@ public class MulticoreExecutor {
     private MulticoreExecutor() {
 
     }
+
+    private static AtomicInteger invocationCounter = new AtomicInteger();
+
 
     /**
      * The number of processors.
@@ -94,6 +100,7 @@ public class MulticoreExecutor {
      */
     public static <T> List<T> run(Collection<? extends Callable<T>> tasks) throws Exception {
         createThreadPool();
+        System.out.println("Invoking #"+invocationCounter.addAndGet(tasks.size()));
 
         List<T> results = new ArrayList<>();
         if (threads == null) {
@@ -113,10 +120,10 @@ public class MulticoreExecutor {
                 }
             }
         }
-        
+
         return results;
     }
-    
+
     /**
      * Shutdown the thread pool.
      */

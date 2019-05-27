@@ -2,7 +2,7 @@ package smile.util;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import org.infinispan.creson.Factory;
-import org.otrack.executor.lambda.Handler;
+import eu.cloudbutton.executor.lambda.Handler;
 
 public class StatefulHandler extends Handler {
 

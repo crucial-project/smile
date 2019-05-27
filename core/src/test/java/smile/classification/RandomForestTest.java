@@ -15,7 +15,7 @@
  *******************************************************************************/
 package smile.classification;
 
-import org.otrack.executor.lambda.AWSLambdaExecutorService;
+import eu.cloudbutton.executor.lambda.AWSLambdaExecutorService;
 import smile.sort.QuickSort;
 import smile.data.Attribute;
 import smile.math.Math;

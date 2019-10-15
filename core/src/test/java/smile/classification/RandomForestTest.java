@@ -16,6 +16,7 @@
 package smile.classification;
 
 import eu.cloudbutton.executor.lambda.AWSLambdaExecutorService;
+import smile.data.LazyS3AttributeDataset;
 import smile.sort.QuickSort;
 import smile.data.Attribute;
 import smile.math.Math;
@@ -79,20 +80,24 @@ public class RandomForestTest {
         ArffParser arffParser = new ArffParser();
         arffParser.setResponseIndex(4);
         try {
-            AttributeDataset weather = arffParser.parse(smile.data.parser.IOUtils.getTestDataFile("weka/weather.nominal.arff"));
+            // AttributeDataset weather = arffParser.parse(smile.data.parser.IOUtils.getTestDataFile("weka/weather.nominal.arff"));
+            AttributeDataset weather = new LazyS3AttributeDataset("weather","cloudbutton","weather.nominal.arff");
+            // weather = new LazyAttributeDataSet(ArffParser,smile.data.parser.IOUtils.getS3File("cloudbutton","weather.nominal.arff"));
             double[][] x = weather.toArray(new double[weather.size()][]);
             int[] y = weather.toArray(new int[weather.size()]);
 
+            // int n = x.length;
             int n = x.length;
             LOOCV loocv = new LOOCV(n);
             int error = 0;
             for (int i = 0; i < n; i++) {
                 double[][] trainx = Math.slice(x, loocv.train[i]);
                 int[] trainy = Math.slice(y, loocv.train[i]);
-                
-                RandomForest forest = new RandomForest(weather.attributes(), trainx, trainy, 1);
+
+                RandomForest forest = new RandomForest(weather, 10);
                 if (y[loocv.test[i]] != forest.predict(x[loocv.test[i]]))
                     error++;
+                break;
             }
             
             System.out.println("Random Forest error = " + error);
@@ -108,10 +113,11 @@ public class RandomForestTest {
     @Test
     public void testIris() {
         System.out.println("Iris");
-        ArffParser arffParser = new ArffParser();
-        arffParser.setResponseIndex(4);
         try {
-            AttributeDataset iris = arffParser.parse(smile.data.parser.IOUtils.getTestDataFile("weka/iris.arff"));
+            // AttributeDataset iris = new LazyS3AttributeDataset("iris","cloudbutton","iris.arff");
+            ArffParser arffParser = new ArffParser();
+            arffParser.setResponseIndex(4);
+            AttributeDataset iris = arffParser.parse(smile.data.parser.IOUtils.getTestDataFile("weka/weather.nominal.arff"));
             double[][] x = iris.toArray(new double[iris.size()][]);
             int[] y = iris.toArray(new int[iris.size()]);
 
@@ -122,7 +128,7 @@ public class RandomForestTest {
                 double[][] trainx = Math.slice(x, loocv.train[i]);
                 int[] trainy = Math.slice(y, loocv.train[i]);
                 
-                RandomForest forest = new RandomForest(iris.attributes(), trainx, trainy, 100);
+                RandomForest forest = new RandomForest(iris, 100);
                 if (y[loocv.test[i]] != forest.predict(x[loocv.test[i]]))
                     error++;
             }
@@ -141,30 +147,71 @@ public class RandomForestTest {
     public void testUSPS() {
         System.out.println("USPS");
         DelimitedTextParser parser = new DelimitedTextParser();
+        parser.setResponseIndex(new NominalAttribute("dAge"), 1);
+        parser.setDelimiter(",");
+        try {
+
+            int ntrees = 32;
+
+            // AttributeDataset train = new LazyS3AttributeDataset("census","cloudbutton","census.txt");
+            AttributeDataset line = parser.parse("line", smile.data.parser.IOUtils.getTestDataFile("classification/census.txt"));
+            AttributeDataset train = new LazyS3AttributeDataset("census","cloudbutton","census.txt");
+            // AttributeDataset test = parser.parse("census", smile.data.parser.IOUtils.getTestDataFile("classification/census.test"));
+
+//            double[][] testx = test.toArray(new double[test.size()][]);
+//            int[] testy = test.toArray(new int[test.size()]);
+
+            long start = System.currentTimeMillis();
+            RandomForest forest = new RandomForest(train, line.attributes(), line.labels(), ntrees, 100, 5, (int) Math.floor(Math.sqrt(line.x()[0].length)), 1.0, DecisionTree.SplitRule.GINI,null);
+            System.out.println(System.currentTimeMillis()-start);
+//
+//            int error = 0;
+//            for (int i = 0; i < testx.length; i++) {
+//                if (forest.predict(testx[i]) != testy[i]) {
+//                    error++;
+//                }
+//            }
+
+//            System.out.println("USPS error = " + error);
+//            System.out.format("USPS OOB error rate = %.2f%%%n", 100.0 * forest.error());
+//            System.out.format("USPS error rate = %.2f%%%n", 100.0 * error / testx.length);
+//            assertTrue(error <= 225);
+        } catch (Exception ex) {
+            System.err.println(ex);
+        }
+    }
+
+    /**
+     * Test of learn method, of class RandomForest.
+     */
+    @Test
+    public void testUSPS2() {
+        System.out.println("USPS");
+        DelimitedTextParser parser = new DelimitedTextParser();
         parser.setResponseIndex(new NominalAttribute("class"), 0);
         try {
-            AttributeDataset train = parser.parse("USPS Train", smile.data.parser.IOUtils.getTestDataFile("usps/zip.train"));
-            AttributeDataset test = parser.parse("USPS Test", smile.data.parser.IOUtils.getTestDataFile("usps/zip.test"));
+            AttributeDataset train = new LazyS3AttributeDataset("USPS Train","cloudbutton","zip.train");
+            train.x(); // FIXME
+            long start = System.currentTimeMillis();
+            RandomForest randomForest = new RandomForest(train, 200);
+            System.out.println("time = "+(System.currentTimeMillis()-start)+"ms");
 
-            double[][] x = train.toArray(new double[train.size()][]);
-            int[] y = train.toArray(new int[train.size()]);
+            parser.parse("USPS Test", smile.data.parser.IOUtils.getTestDataFile("usps/zip.train")); // FIXME
+            AttributeDataset test = parser.parse("USPS Test", smile.data.parser.IOUtils.getTestDataFile("usps/zip.test"));
             double[][] testx = test.toArray(new double[test.size()][]);
             int[] testy = test.toArray(new int[test.size()]);
-
-            int up = x.length/4;
-            RandomForest forest = new RandomForest(Arrays.copyOfRange(x,0,up), Arrays.copyOfRange(y,0,up), 200);
-            
             int error = 0;
             for (int i = 0; i < testx.length; i++) {
-                if (forest.predict(testx[i]) != testy[i]) {
+                if (randomForest.predict(testx[i]) != testy[i]) {
                     error++;
                 }
             }
 
             System.out.println("USPS error = " + error);
-            System.out.format("USPS OOB error rate = %.2f%%%n", 100.0 * forest.error());
+            System.out.format("USPS OOB error rate = %.2f%%%n", 100.0 * randomForest.error());
             System.out.format("USPS error rate = %.2f%%%n", 100.0 * error / testx.length);
-            // assertTrue(error <= 225);
+            assertTrue(error <= 225);
+
         } catch (Exception ex) {
             System.err.println(ex);
         }

@@ -16,6 +16,7 @@
 
 package smile.data;
 
+import java.io.Serializable;
 import java.sql.Timestamp;
 
 /**
@@ -25,7 +26,7 @@ import java.sql.Timestamp;
  *
  * @author Haifeng Li
  */
-public class Datum <T> {
+public class Datum <T> implements Serializable {
     /**
      * Immutable datum object.
      */

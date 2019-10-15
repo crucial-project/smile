@@ -6,10 +6,8 @@ import eu.cloudbutton.executor.lambda.Handler;
 
 public class StatefulHandler extends Handler {
 
-    public static final String CRESON="35.181.47.101:11222";
-
     static {
-        Factory.get(CRESON);
+        Factory.get(ServerlessExecutor.CRESON);
     }
 
     @Override

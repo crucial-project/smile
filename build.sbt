@@ -1,3 +1,5 @@
+enablePlugins(PackPlugin)
+
 name := "smile"
 
 import com.typesafe.sbt.pgp.PgpKeys.{useGpg, publishSigned, publishLocalSigned}

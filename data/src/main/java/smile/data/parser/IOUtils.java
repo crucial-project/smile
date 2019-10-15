@@ -15,6 +15,11 @@
  *******************************************************************************/
 package smile.data.parser;
 
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.AmazonS3Client;
+import com.amazonaws.services.s3.AmazonS3ClientBuilder;
+import com.amazonaws.services.s3.model.S3Object;
+
 import java.io.*;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
@@ -33,6 +38,8 @@ public class IOUtils {
 
     private static String home = System.getProperty("smile.home", "shell/src/universal/");
 
+    private static AmazonS3 s3 = AmazonS3ClientBuilder.defaultClient();
+
     /** Get the file path of sample dataset. */
     public static String getTestDataPath(String path) {
         return home + "/data/" + path;
@@ -41,6 +48,10 @@ public class IOUtils {
     /** Get the file object of sample dataset. */
     public static File getTestDataFile(String path) {
         return new java.io.File(getTestDataPath(path));
+    }
+
+    public static InputStream getS3File(String bucket, String key) {
+        return s3.getObject(bucket,key).getObjectContent();
     }
 
     /** Get the reader of sample datasets. */

@@ -2,7 +2,7 @@
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
-PROJDIR=${DIR}/..
+PROJDIR=${DIR}/../../
 TMPLDIR=${DIR}
 CONFIG_FILE="${DIR}/exp.config"
 TMPDIR="/tmp"

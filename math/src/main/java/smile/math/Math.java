@@ -96,7 +96,7 @@ public class Math {
     /**
      * True when we create the first random number generator.
      */
-    private static boolean firstRNG = true;
+    private static boolean firstRNG = false;
     /**
      * High quality random number generator.
      */
@@ -121,7 +121,7 @@ public class Math {
                     seed |= (bytes[i] & 0xFF);
                 }
 
-                return new smile.math.Random(seed);
+                return new smile.math.Random(System.nanoTime());
             }
         }
     };

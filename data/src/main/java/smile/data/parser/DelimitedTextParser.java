@@ -37,7 +37,7 @@ import smile.data.NumericAttribute;
  * to a row in the table. Within a line, fields are separated by white spaces,
  * each field belonging to one table column. This class can also be
  * used to read other text tabular files by setting delimiter character
- * such ash ','. The file may contain comment lines (starting with '%')
+ * such as ','. The file may contain comment lines (starting with '%')
  * and missing values (indicated by placeholder '?'), which both can be
  * parameterized.
  *
@@ -410,7 +410,8 @@ public class DelimitedTextParser {
 
             s = line.split(delimiter, 0);
             if (s.length != ncols) {
-                throw new ParseException(String.format("%d columns, expected %d", s.length, ncols), s.length);
+                continue;
+                // throw new ParseException(String.format("%d columns, expected %d", s.length, ncols), s.length);
             }
 
             String rowName = hasRowNames ? s[0] : null;

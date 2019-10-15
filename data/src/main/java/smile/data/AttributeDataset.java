@@ -15,6 +15,7 @@
  *******************************************************************************/
 package smile.data;
 
+import java.io.Serializable;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.stream.IntStream;
@@ -29,7 +30,7 @@ import smile.math.Math;
  *
  * @author Haifeng Li
  */
-public class AttributeDataset extends Dataset<double[]> {
+public class AttributeDataset extends Dataset<double[]> implements Serializable {
 
     /**
      * The list of attributes.

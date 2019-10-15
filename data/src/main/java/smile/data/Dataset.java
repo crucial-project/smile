@@ -15,6 +15,7 @@
  *******************************************************************************/
 package smile.data;
 
+import java.io.Serializable;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -27,7 +28,7 @@ import java.util.List;
  * 
  * @author Haifeng Li
  */
-public class Dataset<E> implements Iterable<Datum<E>> {
+public class Dataset<E> implements Iterable<Datum<E>>, Serializable {
     protected static final String DATASET_HAS_NO_RESPONSE = "The dataset has no response values.";
     protected static final String RESPONSE_NOT_NOMINAL = "The response variable is not nominal.";
     protected static final String RESPONSE_NOT_NUMERIC = "The response variable is not numeric.";
@@ -46,7 +47,7 @@ public class Dataset<E> implements Iterable<Datum<E>> {
     /**
      * The data objects.
      */
-    protected List<Datum<E>> data = new ArrayList<>();
+    transient protected List<Datum<E>> data = new ArrayList<>();
 
     /**
      * Constructor.

@@ -153,20 +153,18 @@ public class RandomForestTest {
         parser.setDelimiter(" ");
         try {
 
-            int ntrees = 200;
-            // AttributeDataset train = parser.parse("USPS Train", smile.data.parser.IOUtils.getTestDataFile("usps/zip.train"));
-            AttributeDataset train = new LazyS3AttributeDataset("USPS Train", "eu-west-3","cloudbutton","zip.train");
+            int ntrees = 1;
+            AttributeDataset train = parser.parse("USPS Train", smile.data.parser.IOUtils.getTestDataFile("usps/zip.train"));
+            // AttributeDataset train = new LazyS3AttributeDataset("USPS Train", "eu-west-3","cloudbutton","zip.train");
             System.out.println("loaded: "+train.size());
 
             double[][] testx = train.toArray(new double[train.size()][]);
             int[] testy = train.toArray(new int[train.size()]);
 
-            long start = System.currentTimeMillis();
             RandomForest forest = new RandomForest(train, train.attributes(), train.labels(), ntrees, 100, 5, (int) Math.floor(Math.sqrt(train.x()[0].length)), 1.0, DecisionTree.SplitRule.GINI,null);
-            System.out.println(System.currentTimeMillis()-start);
 
-            // AttributeDataset string = parser.parse("USPS Test", smile.data.parser.IOUtils.getTestDataFile("usps/zip.test"));
-            AttributeDataset line = new LazyS3AttributeDataset("USPS Test", "eu-west-3","cloudbutton","zip.test");
+            AttributeDataset string = parser.parse("USPS Test", smile.data.parser.IOUtils.getTestDataFile("usps/zip.test"));
+            // AttributeDataset line = new LazyS3AttributeDataset("USPS Test", "eu-west-3","cloudbutton","zip.test");
 
             int error = 0;
             for (int i = 0; i < testx.length; i++) {

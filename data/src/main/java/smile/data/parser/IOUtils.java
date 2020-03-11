@@ -38,8 +38,6 @@ public class IOUtils {
 
     private static String home = System.getProperty("smile.home", "shell/src/universal/");
 
-    private static AmazonS3 s3 = AmazonS3ClientBuilder.defaultClient();
-
     /** Get the file path of sample dataset. */
     public static String getTestDataPath(String path) {
         return home + "/data/" + path;
@@ -50,7 +48,10 @@ public class IOUtils {
         return new java.io.File(getTestDataPath(path));
     }
 
-    public static InputStream getS3File(String bucket, String key) {
+    public static InputStream getS3File(String region, String bucket, String key) {
+        AmazonS3 s3 = AmazonS3ClientBuilder.standard()
+                .withRegion(region)
+                .build();
         return s3.getObject(bucket,key).getObjectContent();
     }
 

@@ -9,11 +9,12 @@ import java.util.Arrays;
 
 public class LazyS3AttributeDataset extends AttributeDataset implements Serializable {
 
-    private String bucket, file;
+    private String region, bucket, file;
     transient private AttributeDataset delegate;
 
-    public LazyS3AttributeDataset(String name, String bucket, String file) {
+    public LazyS3AttributeDataset(String name, String region, String bucket, String file) {
         super(name, null);
+        this.region = region;
         this.bucket = bucket;
         this.file = file;
     }
@@ -24,7 +25,7 @@ public class LazyS3AttributeDataset extends AttributeDataset implements Serializ
                 ArffParser parser = new ArffParser(); // FIXME
                 parser.setResponseIndex(4);
                 try {
-                    delegate = parser.parse(smile.data.parser.IOUtils.getS3File(bucket,file));
+                    delegate = parser.parse(smile.data.parser.IOUtils.getS3File(region,bucket,file));
                 } catch (IOException | ParseException e) {
                     e.printStackTrace();
                 }
@@ -33,9 +34,9 @@ public class LazyS3AttributeDataset extends AttributeDataset implements Serializ
                 DelimitedTextParser parser = new DelimitedTextParser();
                 // parser.setResponseIndex(new NominalAttribute("class"), 0);
                 parser.setResponseIndex(new NominalAttribute("dAge"), 1);
-                parser.setDelimiter(",");
+                parser.setDelimiter(" ");
                 try {
-                    delegate = parser.parse(name, smile.data.parser.IOUtils.getS3File(bucket,file));
+                    delegate = parser.parse(name, smile.data.parser.IOUtils.getS3File(region,bucket,file));
                 } catch (IOException e) {
                     e.printStackTrace();
                 } catch (ParseException e) {
@@ -95,17 +96,4 @@ public class LazyS3AttributeDataset extends AttributeDataset implements Serializ
         return delegate.toString();
     }
 
-    // marshalling
-//
-//    @Override
-//    public void writeExternal(ObjectOutput objectOutput) throws IOException {
-//        objectOutput.writeObject(bucket);
-//        objectOutput.writeObject(file);
-//    }
-//
-//    @Override
-//    public void readExternal(ObjectInput objectInput) throws IOException, ClassNotFoundException {
-//        bucket = (String) objectInput.readObject();
-//        file = (String) objectInput.readObject();
-//    }
 }

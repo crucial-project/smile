@@ -30,6 +30,7 @@ then
     mkdir -p ${CODEDIR}/lib
 
     # FIXME
+    AWS_SDK_VERSION="1.11.563"
     cd ${PROJDIR}
     sbt compile test:compile
     cd ${DIR}
@@ -43,7 +44,11 @@ then
     do
     	unzip -q -o $j -d ${CODEDIR}
     done
-    for j in $(find /home/otrack/Implementation/creson/client/target -iname "*.jar");
+    for j in $(find /home/otrack/Implementation/serverless-executor-service/target -iname "*.jar");
+    do
+    	unzip -q -o $j -d ${CODEDIR}	
+    done
+    for j in $(find /home/otrack/Implementation/creson/client/target -iname "infinispan-creson-client*.jar");
     do
     	unzip -q -o $j -d ${CODEDIR}	
     done
@@ -51,7 +56,11 @@ then
     do
     	unzip -q -o $j -d ${CODEDIR}	
     done
-    for j in $(find /home/otrack/.m2/repository -iname "*s3*jar" | head -n 1);
+    for j in $(find /home/otrack/.m2/repository -iname "*aws-java-sdk-s3*jar" | grep ${AWS_SDK_VERSION});
+    do
+    	unzip -q -o $j -d ${CODEDIR}
+    done
+    for j in $(find /home/otrack/.m2/repository -iname "*aws-java-sdk-core*jar" | grep ${AWS_SDK_VERSION});
     do
     	unzip -q -o $j -d ${CODEDIR}
     done
@@ -66,6 +75,7 @@ then
     	--runtime java8 \
     	--role ${AWS_ROLE} \
 	--timeout 60 \
+	--region ${AWS_REGION} \
 	--memory-size 2000 \
     	--handler ${AWS_LAMBDA_FUNCTION_HANDLER} \
     	--zip-file fileb://${DIR}/code.zip  > ${TMPDIR}/log.dat
@@ -74,7 +84,9 @@ then
 elif [[ "$1" == "-delete" ]]
 then
     aws lambda delete-function \
+	--region ${AWS_REGION} \
 	--function-name ${AWS_LAMBDA_FUNCTION_NAME}
 else
     usage
 fi
+

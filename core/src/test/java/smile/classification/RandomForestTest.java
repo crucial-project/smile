@@ -149,11 +149,11 @@ public class RandomForestTest {
     public void testUSPS() {
         System.out.println("USPS");
         DelimitedTextParser parser = new DelimitedTextParser();
-        parser.setResponseIndex(new NominalAttribute("dAge"), 1);
+        parser.setResponseIndex(new NominalAttribute("class"), 0);
         parser.setDelimiter(" ");
         try {
 
-            int ntrees = 1;
+            int ntrees = 200;
             AttributeDataset train = parser.parse("USPS Train", smile.data.parser.IOUtils.getTestDataFile("usps/zip.train"));
             // AttributeDataset train = new LazyS3AttributeDataset("USPS Train", "eu-west-3","cloudbutton","zip.train");
             System.out.println("loaded: "+train.size());

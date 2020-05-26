@@ -40,6 +40,7 @@ then
     	cp -Rf ${PROJDIR}/${module}/target//classes/* ${CODEDIR}/
     	cp -Rf ${PROJDIR}/${module}/target//test-classes/* ${CODEDIR}/
     done
+    jar cvf smile.jar -C ${CODEDIR} .
     for j in $(find /home/otrack/Implementation/serverless-executor-service/target -maxdepth 1 -iname "*.jar");
     do
     	unzip -q -o $j -d ${CODEDIR}
@@ -68,17 +69,18 @@ then
     do
     	unzip -q -o $j -d ${CODEDIR}	
     done
-    cd ${TMPDIR}/code && zip -r -q code.zip * && mv code.zip ${DIR} && cd ${DIR}
-    
+    cd ${CODEDIR} && zip -r -q code.zip * && mv code.zip ${DIR} && cd ${DIR}
     aws lambda create-function \
     	--function-name ${AWS_LAMBDA_FUNCTION_NAME} \
     	--runtime java8 \
     	--role ${AWS_ROLE} \
-	--timeout 60 \
-	--region ${AWS_REGION} \
-	--memory-size 2000 \
+    	--timeout 60 \
+    	--publish \
+    	--region ${AWS_REGION} \
+    	--memory-size 2000 \
     	--handler ${AWS_LAMBDA_FUNCTION_HANDLER} \
     	--zip-file fileb://${DIR}/code.zip  > ${TMPDIR}/log.dat
+    
     cat ${CONFIG_FILE}
     echo "aws.lambda.function.arn=$(grep FunctionArn ${TMPDIR}/log.dat  | awk -F": " '{print $2}' | sed s,[\"\,],,g)" 
 elif [[ "$1" == "-delete" ]]
@@ -89,4 +91,3 @@ then
 else
     usage
 fi
-

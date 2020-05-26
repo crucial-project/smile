@@ -16,10 +16,16 @@
 package smile.classification;
 
 import eu.cloudbutton.executor.lambda.AWSLambdaExecutorService;
+import org.infinispan.creson.AtomicMatrix;
+import org.infinispan.creson.Factory;
+import org.infinispan.creson.object.Reference;
 import smile.data.LazyS3AttributeDataset;
 import smile.sort.QuickSort;
 import smile.data.Attribute;
 import smile.math.Math;
+import smile.validation.AUC;
+import smile.validation.CrossValidation;
+import smile.validation.LOOCV;
 import smile.util.ServerlessExecutor;
 import smile.validation.LOOCV;
 import smile.data.parser.ArffParser;
@@ -67,6 +73,7 @@ public class RandomForestTest {
             e.printStackTrace();
         }
         ServerlessExecutor.createThreadPool(new AWSLambdaExecutorService(properties));
+        Factory.getSingleton().clear(); // FIXME
     }
     
     @After
@@ -84,7 +91,7 @@ public class RandomForestTest {
         try {
             // AttributeDataset weather = arffParser.parse(smile.data.parser.IOUtils.getTestDataFile("weka/weather.nominal.arff"));
             // weather = new LazyAttributeDataSet(ArffParser,smile.data.parser.IOUtils.getS3File("cloudbutton","weather.nominal.arff"));
-            AttributeDataset weather = new LazyS3AttributeDataset("weather","eu-west-3","cloudbutton","weather.nominal.arff");
+            AttributeDataset weather = new LazyS3AttributeDataset("weather","eu-west-3","cloudbutton","weather.nominal.arff",4);
             double[][] x = weather.toArray(new double[weather.size()][]);
             int[] y = weather.toArray(new int[weather.size()]);
 
@@ -117,7 +124,7 @@ public class RandomForestTest {
         System.out.println("Iris");
         try {
             // AttributeDataset iris = arffParser.parse(smile.data.parser.IOUtils.getTestDataFile("weka/weather.nominal.arff"));
-            AttributeDataset iris = new LazyS3AttributeDataset("iris","eu-west-3","cloudbutton","iris.arff");
+            AttributeDataset iris = new LazyS3AttributeDataset("iris","eu-west-3","cloudbutton","iris.arff",4);
             ArffParser arffParser = new ArffParser();
             arffParser.setResponseIndex(4);
             double[][] x = iris.toArray(new double[iris.size()][]);
@@ -161,7 +168,7 @@ public class RandomForestTest {
             double[][] testx = train.toArray(new double[train.size()][]);
             int[] testy = train.toArray(new int[train.size()]);
 
-            RandomForest forest = new RandomForest(train, train.attributes(), train.labels(), ntrees, 100, 5, (int) Math.floor(Math.sqrt(train.x()[0].length)), 1.0, DecisionTree.SplitRule.GINI,null);
+            RandomForest forest = new RandomForest(train, ntrees, 100, 5, (int) Math.floor(Math.sqrt(train.x()[0].length)), 1.0, DecisionTree.SplitRule.GINI,null);
 
             AttributeDataset string = parser.parse("USPS Test", smile.data.parser.IOUtils.getTestDataFile("usps/zip.test"));
             // AttributeDataset line = new LazyS3AttributeDataset("USPS Test", "eu-west-3","cloudbutton","zip.test");
@@ -253,4 +260,124 @@ public class RandomForestTest {
             System.err.println(ex);
         }
     }
+
+    private void validate(int trees, String dataset, String url, int response) {
+        long time = System.currentTimeMillis();
+        ArffParser parser = new ArffParser();
+        parser.setResponseIndex(response);
+        try {
+            AttributeDataset data = new LazyS3AttributeDataset(dataset,"eu-west-2","cloudbutton-dataset",url, response);
+//            int[] datay = data.toArray(new int[data.size()]);
+//            double[][] datax = data.toArray(new double[data.size()][]);
+
+//            int n = datax.length;
+//            int k = 2;
+//
+//            CrossValidation cv = new CrossValidation(n, k);
+//            double area = 0;
+//            double sa = 0;
+//            for (int i = 0; i < k; i++) {
+//                double[][] trainx = Math.slice(datax, cv.train[i]);
+//                int[] trainy = Math.slice(datay, cv.train[i]);
+//                double[][] testx = Math.slice(datax, cv.test[i]);
+//                int[] testy = Math.slice(datay, cv.test[i]);
+
+            RandomForest forest = new RandomForest(data,trees);
+            System.out.format("OOB error rate = %.4f%n", forest.error());
+
+//                int[] truth = testy;
+//                double[] probability = new double[testx.length];
+//
+//                for (int j = 0; j < testx.length; j++) {
+//                    double[] posteriori = {0.0,0.0};
+//                    forest.predict(testx[j],posteriori);
+//                    probability[j] = posteriori[1];
+//                }
+//                area=AUC.measure(truth,probability);
+//                System.out.println("AUC="+area);
+//                sa+=area;
+//            }
+
+//            time = System.currentTimeMillis() - time;
+//            System.out.format(dataset+" "+trees+" "+k+"-CV avg AUC="+(sa/k)+" (in "+ time + "ms)");
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    @Test
+    public void testClick() {
+//        test(1,"iris", "weka/iris.arff", 4);
+//        test(10,"iris", "weka/iris.arff", 4);
+//        test(100,"iris", "weka/iris.arff", 4);
+//        test(1000,"iris", "weka/iris.arff", 4);
+
+//        test(1,"click", "click/train.arff", 0);
+//        test(10,"click", "click/train.arff", 0);
+//        test(100,"click", "click/train.arff", 0);
+//        test(1000,"click", "click/train.arff", 0);
+
+//        test(1,"credit-g", "credit-g/train.arff", 20);
+//        test(100,"credit-g", "credit-g/train.arff", 20);
+//        test(1000,"credit-g", "credit-g/train.arff", 20);
+
+//        test(1,"soil", "soil/train.arff", 36);
+//        test(10,"soil", "soil/train.arff", 36);
+//        test(100,"soil", "soil/train.arff", 36);
+
+        test(100,"weather.nominal", 4);
+
+        // test(10,"soil", 36);
+        // test(100,"click", "click.arff", 0);
+        // test(100,"weather", "weather.nominal.arff", 4);
+
+//        test(1,"kdd",  41);
+//        test(10,"creditcard", "creditcard.arff", 30);
+
+    }
+
+
+    private void test(int trees, String dataset, int response) {
+        long time = System.currentTimeMillis();
+        String url = dataset+".arff";
+        ArffParser parser = new ArffParser();
+        parser.setResponseIndex(response);
+        try {
+            AttributeDataset data = new LazyS3AttributeDataset(dataset,"eu-west-2","cloudbutton-dataset",url, response);
+            RandomForest forest = new RandomForest(data,trees);
+            // System.err.format("OOB error rate = %.4f%n", forest.error());
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    @Test
+    public void benchmark(){
+        String[] datasets = {"soil", "usps", "creditcard", "click"};
+        Integer[] response = {36,0,30,0};
+
+        int ntrees = 50;
+
+        for (int i=0; i<datasets.length; i++) {
+            long start = System.currentTimeMillis();
+            test(ntrees, datasets[i], response[i]);
+            System.out.println(datasets[i]+"\t"+(System.currentTimeMillis()-start));
+        }
+    }
+
+    @Test
+    public void becnhmark2(){
+        Integer[] sizes = {200};
+        for (int i=0; i<sizes.length; i++) {
+            System.out.print(sizes[i]+"\t");
+            for(int k= 0; k<10; k++) {
+                long start = System.currentTimeMillis();
+                test(sizes[i], "creditcard", 30);
+                System.out.print((System.currentTimeMillis() - start)+"\t");
+            }
+            System.out.println("");
+        }
+    }
+
+
 }

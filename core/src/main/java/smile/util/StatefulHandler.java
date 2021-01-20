@@ -1,13 +1,13 @@
 package smile.util;
 
 import com.amazonaws.services.lambda.runtime.Context;
-import org.infinispan.creson.Factory;
-import eu.cloudbutton.executor.lambda.Handler;
+import org.crucial.dso.Factory;
+import org.crucial.executor.aws.AWSLambdaHandler;
 
-public class StatefulHandler extends Handler {
+public class StatefulHandler extends AWSLambdaHandler {
 
     static {
-        Factory.get(ServerlessExecutor.CRESON);
+        Factory.get(ServerlessExecutor.CRUCIAL);
     }
 
     @Override

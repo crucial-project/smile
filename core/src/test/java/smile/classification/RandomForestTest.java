@@ -15,10 +15,10 @@
  *******************************************************************************/
 package smile.classification;
 
-import eu.cloudbutton.executor.lambda.AWSLambdaExecutorService;
-import org.infinispan.creson.AtomicMatrix;
-import org.infinispan.creson.Factory;
-import org.infinispan.creson.object.Reference;
+import org.crucial.executor.aws.AWSLambdaExecutorService;
+import org.crucial.dso.AtomicMatrix;
+import org.crucial.dso.Factory;
+import org.crucial.dso.object.Reference;
 import smile.data.LazyS3AttributeDataset;
 import smile.sort.QuickSort;
 import smile.data.Attribute;
@@ -161,8 +161,8 @@ public class RandomForestTest {
         try {
 
             int ntrees = 200;
-            AttributeDataset train = parser.parse("USPS Train", smile.data.parser.IOUtils.getTestDataFile("usps/zip.train"));
-            // AttributeDataset train = new LazyS3AttributeDataset("USPS Train", "eu-west-3","cloudbutton","zip.train");
+            // AttributeDataset train = parser.parse("USPS Train", smile.data.parser.IOUtils.getTestDataFile("usps/zip.train"));
+            AttributeDataset train = new LazyS3AttributeDataset("USPS Train", "eu-west-3","cloudbutton","zip.train",0);
             System.out.println("loaded: "+train.size());
 
             double[][] testx = train.toArray(new double[train.size()][]);
@@ -170,8 +170,8 @@ public class RandomForestTest {
 
             RandomForest forest = new RandomForest(train, ntrees, 100, 5, (int) Math.floor(Math.sqrt(train.x()[0].length)), 1.0, DecisionTree.SplitRule.GINI,null);
 
-            AttributeDataset string = parser.parse("USPS Test", smile.data.parser.IOUtils.getTestDataFile("usps/zip.test"));
-            // AttributeDataset line = new LazyS3AttributeDataset("USPS Test", "eu-west-3","cloudbutton","zip.test");
+            // AttributeDataset string = parser.parse("USPS Test", smile.data.parser.IOUtils.getTestDataFile("usps/zip.test"));
+            AttributeDataset line = new LazyS3AttributeDataset("USPS Test", "eu-west-3","cloudbutton","zip.test",0);
 
             int error = 0;
             for (int i = 0; i < testx.length; i++) {

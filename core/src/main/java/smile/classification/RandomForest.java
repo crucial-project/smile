@@ -20,7 +20,7 @@ import java.lang.invoke.SerializedLambda;
 import java.util.*;
 import java.util.concurrent.Callable;
 
-import org.infinispan.creson.*;
+import org.crucial.dso.*;
 
 import java.util.concurrent.atomic.AtomicIntegerArray;
 import java.util.function.BiFunction;
@@ -328,7 +328,6 @@ public class RandomForest implements SoftClassifier<double[]> {
             this.dataset = dataset;
             this.mtry = mtry;
             this.nodeSize = nodeSize;
-            this.maxNodes = maxNodes;
             this.subsample = subsample;
             this.rule = rule;
             this.classWeight = classWeight;
@@ -349,11 +348,10 @@ public class RandomForest implements SoftClassifier<double[]> {
                 mtry = (int) Math.floor(Math.sqrt(data[0].length));
             }
 
-            // FIXME
             if (this.rank==0) {
                 prediction = Factory.getSingleton().getInstanceOf(AtomicMatrix.class,"prediction",false, false, true, "prediction", Integer.class, new Integer(0), n, m);
                 List<Integer> response = Factory.getSingleton().getInstanceOf(ArrayList.class, "response", false, false, true);
-                List<Integer> list = new ArrayList();
+                List<Integer> list = new ArrayList<>();
                 for( int label : y ) list.add(label);
                 response.addAll(list);
             }
@@ -460,7 +458,7 @@ public class RandomForest implements SoftClassifier<double[]> {
                 }
             }
 
-            prediction.compute(toAdd,((org.infinispan.creson.RemoteBiFunction<Integer,Integer,Integer>) Integer::sum));
+            prediction.compute(toAdd,((org.crucial.dso.RemoteBiFunction<Integer,Integer,Integer>) Integer::sum));
 
             double accuracy = 1.0;
             if (oob != 0) {
@@ -671,7 +669,6 @@ public class RandomForest implements SoftClassifier<double[]> {
             throw new RuntimeException();
         }
 
-        // FIXME
         AtomicMatrix<Integer> prediction = Factory.getSingleton().getInstanceOf(AtomicMatrix.class,"prediction");
         ArrayList<Integer> response = Factory.getSingleton().getInstanceOf(ArrayList.class,"response");
         int[][] prediction_array = Stream.unboxInteger2D(prediction.toArray());

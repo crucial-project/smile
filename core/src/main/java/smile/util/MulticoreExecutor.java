@@ -24,8 +24,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadPoolExecutor;
 
-import org.infinispan.creson.AtomicInteger;
-import org.infinispan.creson.Factory;
+import org.crucial.dso.AtomicInteger;
+import org.crucial.dso.Factory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

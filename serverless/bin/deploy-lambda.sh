@@ -41,19 +41,19 @@ then
     	cp -Rf ${PROJDIR}/${module}/target//test-classes/* ${CODEDIR}/
     done
     jar cvf smile.jar -C ${CODEDIR} .
-    for j in $(find /home/otrack/Implementation/serverless-executor-service/target -maxdepth 1 -iname "*.jar");
+    for j in $(find /home/otrack/Implementation/crucial-project/executor/target -maxdepth 1 -iname "*.jar");
     do
     	unzip -q -o $j -d ${CODEDIR}
     done
-    for j in $(find /home/otrack/Implementation/serverless-executor-service/target -iname "*.jar");
+    for j in $(find /home/otrack/Implementation/crucial-project/executor/target -iname "*.jar");
     do
     	unzip -q -o $j -d ${CODEDIR}	
     done
-    for j in $(find /home/otrack/Implementation/creson/client/target -iname "infinispan-creson-client*.jar");
+    for j in $(find /home/otrack/Implementation/crucial-project/dso/client/target -iname "dso-client*.jar");
     do
     	unzip -q -o $j -d ${CODEDIR}	
     done
-    for j in $(find /home/otrack/Implementation/creson/server/target -iname "slf4j*.jar");
+    for j in $(find /home/otrack/Implementation/crucial-project/dso/server/target -iname "slf4j*.jar");
     do
     	unzip -q -o $j -d ${CODEDIR}	
     done
@@ -65,7 +65,7 @@ then
     do
     	unzip -q -o $j -d ${CODEDIR}
     done
-    for j in $(find /home/otrack/Implementation/creson/client/target/lib -iname "*.jar");
+    for j in $(find /home/otrack/Implementation/crucial-project/dso/client/target/lib -iname "*.jar");
     do
     	unzip -q -o $j -d ${CODEDIR}	
     done

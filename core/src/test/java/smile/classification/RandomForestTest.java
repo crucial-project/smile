@@ -72,7 +72,7 @@ public class RandomForestTest {
     /**
      * Test of learn method, of class RandomForest.
      */
-    @Test
+    // @Test
     public void testWeather() {
         System.out.println("Weather");
         ArffParser arffParser = new ArffParser();
@@ -108,7 +108,7 @@ public class RandomForestTest {
     /**
      * Test of learn method, of class RandomForest.
      */
-    @Test
+    // @Test
     public void testIris() {
         System.out.println("Iris");
         try {
@@ -125,7 +125,7 @@ public class RandomForestTest {
             for (int i = 0; i < n; i++) {
 //                double[][] trainx = Math.slice(x, loocv.train[i]);
 //                int[] trainy = Math.slice(y, loocv.train[i]);
-                RandomForest forest = new RandomForest(iris, 1);
+                RandomForest forest = new RandomForest(iris, 50);
                 if (y[loocv.test[i]] != forest.predict(x[loocv.test[i]]))
                     error++;
                 break;
@@ -141,7 +141,7 @@ public class RandomForestTest {
     /**
      * Test of learn method, of class RandomForest.
      */
-    @Test
+    // @Test
     public void testUSPS() {
         System.out.println("USPS");
         DelimitedTextParser parser = new DelimitedTextParser();
@@ -149,7 +149,7 @@ public class RandomForestTest {
         parser.setDelimiter(" ");
         try {
 
-            int ntrees = 200;
+            int ntrees = 10;
             // AttributeDataset train = parser.parse("USPS Train", smile.data.parser.IOUtils.getTestDataFile("usps/zip.train"));
             AttributeDataset train = new LazyS3AttributeDataset("USPS Train", "eu-west-3","cloudbutton","zip.train",0);
             System.out.println("loaded: "+train.size());
@@ -181,7 +181,7 @@ public class RandomForestTest {
     /**
      * Test of learn method, of class RandomForest.
      */
-    @Test
+    // @Test
     public void testUSPSNominal() {
         System.out.println("USPS nominal");
         DelimitedTextParser parser = new DelimitedTextParser();
@@ -217,7 +217,7 @@ public class RandomForestTest {
                 attributes[i] = new NominalAttribute("V"+i, values);
             }
             
-            RandomForest forest = new RandomForest(attributes, x, y, 200);
+            RandomForest forest = new RandomForest(attributes, x, y, 50);
             
             int error = 0;
             for (int i = 0; i < testx.length; i++) {
@@ -294,7 +294,7 @@ public class RandomForestTest {
         }
     }
 
-    @Test
+    // @Test
     public void testClick() {
 //        test(1,"iris", "weka/iris.arff", 4);
 //        test(10,"iris", "weka/iris.arff", 4);
@@ -314,7 +314,7 @@ public class RandomForestTest {
 //        test(10,"soil", "soil/train.arff", 36);
 //        test(100,"soil", "soil/train.arff", 36);
 
-        test(100,"weather.nominal", 4);
+        test(50,"weather.nominal", 4);
 
         // test(10,"soil", 36);
         // test(100,"click", "click.arff", 0);
@@ -342,10 +342,10 @@ public class RandomForestTest {
 
     @Test
     public void benchmark(){
-        String[] datasets = {"soil", "usps", "creditcard", "click"};
-        Integer[] response = {36,0,30,0};
+        String[] datasets = {"soil", "usps"};
+        Integer[] response = {36,0};
 
-        int ntrees = 50;
+        int ntrees = 10;
 
         for (int i=0; i<datasets.length; i++) {
             long start = System.currentTimeMillis();
@@ -354,8 +354,8 @@ public class RandomForestTest {
         }
     }
 
-    @Test
-    public void becnhmark2(){
+    // @Test
+    public void benchmark2(){
         Integer[] sizes = {200};
         for (int i=0; i<sizes.length; i++) {
             System.out.print(sizes[i]+"\t");

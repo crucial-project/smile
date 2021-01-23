@@ -1,6 +1,7 @@
 package smile.util;
 
 import org.crucial.dso.Factory;
+import org.crucial.dso.client.Client;
 import org.crucial.executor.ServerlessExecutorService;
 
 import java.util.ArrayList;
@@ -11,12 +12,10 @@ import java.util.concurrent.Future;
 
 public class ServerlessExecutor{
 
-    public static final String CRUCIAL ="34.89.33.39:11222";
-
     private static ServerlessExecutorService service;
 
     public static void createThreadPool(ServerlessExecutorService s) {
-        Factory.get(CRUCIAL);
+        Client.getClient();
         service = s;
     }
 

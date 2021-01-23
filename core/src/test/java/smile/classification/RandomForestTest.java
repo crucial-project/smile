@@ -15,35 +15,26 @@
  *******************************************************************************/
 package smile.classification;
 
-import org.crucial.executor.aws.AWSLambdaExecutorService;
-import org.crucial.dso.AtomicMatrix;
 import org.crucial.dso.Factory;
-import org.crucial.dso.object.Reference;
-import smile.data.LazyS3AttributeDataset;
-import smile.sort.QuickSort;
+import org.crucial.dso.client.Client;
+import org.crucial.executor.aws.AWSLambdaExecutorService;
+import org.junit.*;
 import smile.data.Attribute;
+import smile.data.AttributeDataset;
+import smile.data.LazyS3AttributeDataset;
+import smile.data.NominalAttribute;
+import smile.data.parser.ArffParser;
+import smile.data.parser.DelimitedTextParser;
 import smile.math.Math;
-import smile.validation.AUC;
-import smile.validation.CrossValidation;
-import smile.validation.LOOCV;
+import smile.sort.QuickSort;
 import smile.util.ServerlessExecutor;
 import smile.validation.LOOCV;
-import smile.data.parser.ArffParser;
-import smile.data.AttributeDataset;
-import smile.data.NominalAttribute;
-import smile.data.parser.DelimitedTextParser;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Arrays;
 import java.util.Properties;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertTrue;
 
 /**
  *
@@ -57,12 +48,10 @@ public class RandomForestTest {
     }
 
     @BeforeClass
-    public static void setUpClass() throws Exception {
-    }
+    public static void setUpClass() throws Exception {}
 
     @AfterClass
-    public static void tearDownClass() throws Exception {
-    }
+    public static void tearDownClass() throws Exception {}
     
     @Before
     public void setUp() {
@@ -73,7 +62,7 @@ public class RandomForestTest {
             e.printStackTrace();
         }
         ServerlessExecutor.createThreadPool(new AWSLambdaExecutorService(properties));
-        Factory.getSingleton().clear(); // FIXME
+        Client.getClient().clear();
     }
     
     @After
@@ -103,7 +92,7 @@ public class RandomForestTest {
                 double[][] trainx = Math.slice(x, loocv.train[i]);
                 int[] trainy = Math.slice(y, loocv.train[i]);
 
-                RandomForest forest = new RandomForest(weather, 100);
+                RandomForest forest = new RandomForest(weather, 50);
                 if (y[loocv.test[i]] != forest.predict(x[loocv.test[i]]))
                     error++;
                 break;

@@ -24,7 +24,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadPoolExecutor;
 
-import org.crucial.dso.AtomicInteger;
+import org.crucial.dso.AtomicCounter;
 import org.crucial.dso.Factory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,7 +42,7 @@ public class MulticoreExecutor {
 
     }
 
-    private static AtomicInteger invocationCounter = new AtomicInteger();
+    private static AtomicCounter invocationCounter = new AtomicCounter();
 
 
     /**
@@ -100,7 +100,7 @@ public class MulticoreExecutor {
      */
     public static <T> List<T> run(Collection<? extends Callable<T>> tasks) throws Exception {
         createThreadPool();
-        System.out.println("Invoking #"+invocationCounter.addAndGet(tasks.size()));
+        System.out.println("Invoking #"+invocationCounter.increment(tasks.size()));
 
         List<T> results = new ArrayList<>();
         if (threads == null) {

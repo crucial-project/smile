@@ -15,29 +15,25 @@
  *******************************************************************************/
 package smile.classification;
 
-import java.io.Serializable;
-import java.lang.invoke.SerializedLambda;
-import java.util.*;
-import java.util.concurrent.Callable;
-
-import org.crucial.dso.*;
-
-import java.util.concurrent.atomic.AtomicIntegerArray;
-import java.util.function.BiFunction;
-import java.util.function.Function;
-
+import org.crucial.dso.AtomicMatrix;
+import org.crucial.dso.CyclicBarrier;
+import org.crucial.dso.client.Client;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import smile.data.Attribute;
 import smile.data.AttributeDataset;
-import smile.data.Dataset;
 import smile.math.Math;
 import smile.util.MulticoreExecutor;
 import smile.util.ServerlessExecutor;
-import smile.util.SmileUtils;
 import smile.util.Stream;
 import smile.validation.Accuracy;
 import smile.validation.ClassificationMeasure;
+
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.Callable;
 
 /**
  * Random forest for classification. Random forest is an ensemble classifier
@@ -347,21 +343,21 @@ public class RandomForest implements SoftClassifier<double[]> {
             if (mtry == -1) {
                 mtry = (int) Math.floor(Math.sqrt(data[0].length));
             }
+            logger.info("Before barrier "+rank);
 
             if (this.rank==0) {
-                prediction = Factory.getSingleton().getInstanceOf(AtomicMatrix.class,"prediction",false, false, true, "prediction", Integer.class, new Integer(0), n, m);
-                List<Integer> response = Factory.getSingleton().getInstanceOf(ArrayList.class, "response", false, false, true);
+                prediction = Client.getClient().withForceNew().getAtomicMatrix("prediction", Integer.class, new Integer(0),n, m);
+                List<Integer> response = Client.getClient().withForceNew().getAtomicList("response");
                 List<Integer> list = new ArrayList<>();
                 for( int label : y ) list.add(label);
                 response.addAll(list);
             }
 
-            CyclicBarrier barrier = new CyclicBarrier("barrier",ntasks);
-            barrier.await();
+            CyclicBarrier barrier = Client.getClient().getCyclicBarrier("barrier",ntasks);
+            int brank = barrier.waiting();
+            logger.info("Out of barrier "+brank);
 
-            logger.info("Out of barrier "+this.rank);
-
-            prediction = Factory.getSingleton().getInstanceOf(AtomicMatrix.class,"prediction");
+            prediction = Client.getClient().getAtomicMatrix("prediction");
 
             if (labels.length < 2) {
                 throw new IllegalArgumentException("Only one class.");
@@ -663,14 +659,14 @@ public class RandomForest implements SoftClassifier<double[]> {
 
         try {
             trees = ServerlessExecutor.run(tasks);
-//            trees = MulticoreExecutor.run(tasks);
+            // trees = MulticoreExecutor.run(tasks);
         } catch (Exception ex) {
             logger.error("Failed to train random forest", ex);
             throw new RuntimeException();
         }
 
-        AtomicMatrix<Integer> prediction = Factory.getSingleton().getInstanceOf(AtomicMatrix.class,"prediction");
-        ArrayList<Integer> response = Factory.getSingleton().getInstanceOf(ArrayList.class,"response");
+        AtomicMatrix<Integer> prediction = Client.getClient().getAtomicMatrix("prediction");
+        List<Integer> response = Client.getClient().getAtomicList("response");
         int[][] prediction_array = Stream.unboxInteger2D(prediction.toArray());
         Object[] y = response.toArray();
 

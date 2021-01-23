@@ -1,3 +1,3 @@
 name := "smile-data"
 
-libraryDependencies += "com.amazonaws" % "aws-java-sdk-s3" % "1.11.563"
+libraryDependencies += "com.amazonaws" % "aws-java-sdk-s3" % "1.11.896"

@@ -4,7 +4,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 PROJDIR=${DIR}/../../
 TMPLDIR=${DIR}
-CONFIG_FILE="${DIR}/exp.config"
+CONFIG_FILE="${DIR}/config.properties"
 TMPDIR="/tmp"
 LOGDIR="${TMPDIR}/log"
 

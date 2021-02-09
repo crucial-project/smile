@@ -15,7 +15,7 @@ This code was installed and tested successfully with SBT 1.4.6 and AdoptOpenJDK 
   2. edit REGION, ACCOUNT and ROLE accordingly
   3. run deploy.sh -create-dso to deploy DSO over k8s
   4. edit "creson=" in config.properties accordingly
-  6. run deploy.sh -create-lambda.sh to deploy over Lambda
+  6. run deploy.sh -create-lambda to deploy over Lambda
   7. edit "aws.lambda.function.arn=" in config.properties accordingly
 - go back to the project root dir 
 - cp serverless/bin/config.properties core/src/test/resources/config.properties
